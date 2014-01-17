@@ -10,6 +10,7 @@ Serialization Benchmark
 ## Cold Start Measurements
 
 Machine: Mac Book Pro, i5, Mac OS X 10.8
+Java: Oracle JRE 1.7.0_40
 
 ```
 Serializer: GSON
@@ -28,6 +29,7 @@ Fixture Size: 10000, Serialization Time: 510 msec, Deserialization Time: 176 mse
 ## Multiple Runs
 
 Machine: Mac Book Pro MC373, i7, Mac OS X 10.9
+Java: Oracle JRE 1.7.0_45
 
 Fixture Size = 10000
 ```
