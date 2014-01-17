@@ -28,6 +28,8 @@ import java.util.List;
 
 /**
  * Entry point.
+ *
+ * @author Alexander Shabanov
  */
 public final class CliApp {
   private static final String CHARSET = "UTF-8";
@@ -68,22 +70,19 @@ public final class CliApp {
   }
 
   private static void usage() {
-    System.out.println("Usage: console-runner -k [GSON|JACKSON|PROTOBUF] -s [Number: Fixture Size]");
+    System.out.println("Usage: console-runner -k [GSON|GSON2|JACKSON|PROTOBUF] -s [Number: Fixture Size] -r [1{Count of runs}]");
   }
 
   private static void errorAndUsage(String str) {
     System.err.println("Error: " + str);
     usage();
+    System.exit(-1);
   }
 
   public static void main(String[] args) {
-    if (System.currentTimeMillis() != 1) {
-      // cheat compiler - test args for debug
-      args = new String[] { "-k", "PROTOBUF", "-s", "10000" };
-    }
-
     SerializerKind serializerKind = null;
     int fixtureSize = -1;
+    int runsCount = 1;
     for (int i = 0; i < args.length;++i) {
       if ("-k".equals(args[i])) {
         ++i;
@@ -99,31 +98,42 @@ public final class CliApp {
           return;
         }
         fixtureSize = Integer.parseInt(args[i]);
+      } else if ("-r".equals(args[i])) {
+        ++i;
+        if (i >= args.length) {
+          errorAndUsage("-r switch expects a numeric argument");
+          return;
+        }
+        runsCount = Integer.parseInt(args[i]);
       } else {
         errorAndUsage("Unknown switch: " + args[i]);
+        return;
       }
     }
 
     if (serializerKind == null || fixtureSize < 0) {
       errorAndUsage("At least one of the mandatory parameters is missing");
+      return;
     }
 
     // Do the actual work
     final CliApp app = new CliApp(fixtureSize);
 
-    String metricsMessage;
-    try {
-      final Metrics metrics = app.runTest(serializerKind);
-      metricsMessage = "Fixture Size: " + fixtureSize + ", " +
-          "Serialization Time: " + metrics.serializationTime + " msec, " +
-          "Deserialization Time: " + metrics.deserializationTime + " msec";
-    } catch (Exception e) {
-      metricsMessage = "Unable to fetch time delta";
-      System.err.println(metricsMessage + "\nError:\n" + e);
-    }
-
     System.out.println("Serializer: " + serializerKind);
-    System.out.println(metricsMessage);
+    for (int r = 0; r < runsCount; ++r) {
+      String metricsMessage;
+      try {
+        final Metrics metrics = app.runTest(serializerKind);
+        metricsMessage = "Run #" + r + ", Fixture Size: " + fixtureSize + ", " +
+            "Serialization Time: " + metrics.serializationTime + " msec, " +
+            "Deserialization Time: " + metrics.deserializationTime + " msec";
+      } catch (Exception e) {
+        metricsMessage = "Unable to fetch time delta";
+        System.err.println(metricsMessage + "\nError:\n" + e);
+      }
+
+      System.out.println(metricsMessage);
+    }
   }
 
   private Metrics runTest(SerializerKind kind) throws IOException {
