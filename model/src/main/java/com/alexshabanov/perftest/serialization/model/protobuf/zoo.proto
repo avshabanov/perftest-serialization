@@ -1,0 +1,29 @@
+
+// To generate Pb.java file run in the project root:
+// protoc -I=. --java_out=./src/main/java ./src/main/java/com/alexshabanov/perftest/serialization/model/protobuf/zoo.proto
+
+option java_package = "com.alexshabanov.perftest.serialization.model.protobuf";
+option java_outer_classname = "Pb";
+
+message Memo {
+    repeated string lines = 1;
+    required int32 count = 2;
+}
+
+message Description {
+    required string note = 1;
+    required int64 timestamp = 2;
+    required Memo memo = 3;
+}
+
+message Animal {
+    required int64 id = 1;
+    required string name = 2;
+    required Description description = 3;
+    required int32 type = 4;
+}
+
+message Zoo {
+    required string name = 1;
+    repeated Animal animals = 2;
+}
