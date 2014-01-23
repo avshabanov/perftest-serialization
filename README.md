@@ -41,11 +41,11 @@ Run #3, Fixture Size: 10000, Serialization Time: 56 msec, Deserialization Time: 
 Run #4, Fixture Size: 10000, Serialization Time: 64 msec, Deserialization Time: 130 msec
 
 Serializer: GSON2
-Run #0, Fixture Size: 10000, Serialization Time: 377 msec, Deserialization Time: 167 msec
-Run #1, Fixture Size: 10000, Serialization Time: 74 msec, Deserialization Time: 76 msec
-Run #2, Fixture Size: 10000, Serialization Time: 48 msec, Deserialization Time: 28 msec
-Run #3, Fixture Size: 10000, Serialization Time: 44 msec, Deserialization Time: 36 msec
-Run #4, Fixture Size: 10000, Serialization Time: 83 msec, Deserialization Time: 21 msec
+Run #0, Fixture Size: 10000, Serialization Time: 249 msec, Deserialization Time: 201 msec
+Run #1, Fixture Size: 10000, Serialization Time: 71 msec, Deserialization Time: 31 msec
+Run #2, Fixture Size: 10000, Serialization Time: 74 msec, Deserialization Time: 33 msec
+Run #3, Fixture Size: 10000, Serialization Time: 57 msec, Deserialization Time: 37 msec
+Run #4, Fixture Size: 10000, Serialization Time: 128 msec, Deserialization Time: 27 msec
 
 Serializer: JACKSON
 Run #0, Fixture Size: 10000, Serialization Time: 217 msec, Deserialization Time: 281 msec

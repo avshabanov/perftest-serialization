@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -36,7 +38,6 @@ public final class CliApp {
 
   // gson
   private final Gson gson;
-  private final Gson gson2;
 
   // jackson
   private final ObjectWriter jsonWriter;
@@ -56,13 +57,6 @@ public final class CliApp {
     gsonBuilder.registerTypeAdapter(Memo.class, new MemoGsonDeserializer());
     gsonBuilder.registerTypeAdapter(Zoo.class, new ZooGsonDeserializer());
     gson = gsonBuilder.create();
-
-    final GsonBuilder gsonBuilder2 = new GsonBuilder();
-    gsonBuilder2.registerTypeAdapter(Animal.class, new AnimalTypeAdapter());
-    gsonBuilder2.registerTypeAdapter(Description.class, new DescriptionTypeAdapter());
-    gsonBuilder2.registerTypeAdapter(Memo.class, new MemoTypeAdapter());
-    gsonBuilder2.registerTypeAdapter(Zoo.class, new ZooTypeAdapter());
-    gson2 = gsonBuilder2.create();
 
     final ObjectMapper mapper = new ObjectMapper();
     jsonWriter = mapper.writerWithType(Zoo.class);
@@ -180,17 +174,19 @@ public final class CliApp {
   private Metrics runGson2Test() throws IOException {
     final ByteArrayOutputStream bos = new ByteArrayOutputStream(estimatedRawSize);
     final OutputStreamWriter writer = new OutputStreamWriter(bos, CHARSET);
+    final JsonWriter jsonWriter = new JsonWriter(writer);
 
     long start = System.currentTimeMillis();
-    gson2.toJson(zoo, writer);
+    ZooTypeAdapter.writeObject(jsonWriter, zoo);
     final long serializationTime = System.currentTimeMillis() - start;
     writer.close();
 
     final ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
     final InputStreamReader reader = new InputStreamReader(bis);
+    final JsonReader jsonReader = new JsonReader(reader);
 
     start = System.currentTimeMillis();
-    final Zoo other = gson2.fromJson(reader, Zoo.class);
+    final Zoo other = ZooTypeAdapter.readObject(jsonReader);
     final long deserializationTime = System.currentTimeMillis() - start;
     reader.close();
 
