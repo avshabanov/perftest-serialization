@@ -4,11 +4,13 @@ import com.alexshabanov.perftest.serialization.model.Memo;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,7 +42,9 @@ public class JacksonModuleProvider {
 
     @Override
     public Memo deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-      expectStartObject(jp, Memo.class);
+      if (jp.getCurrentToken() != JsonToken.START_OBJECT) {
+        throw ctxt.mappingException(Memo.class);
+      }
 
       // fields data
       int count = -1;
@@ -48,34 +52,28 @@ public class JacksonModuleProvider {
 
       // reader
       for (;;) {
-        JsonToken token = jp.nextToken();
+        // read field name or end-of-object
+        final JsonToken token = jp.nextToken();
         if (token == JsonToken.END_OBJECT) {
           break;
         } else if (token != JsonToken.FIELD_NAME) {
-          throw new JsonMappingException("Expected field for " + Memo.class, jp.getCurrentLocation());
+          throw ctxt.mappingException("Field name expected");
         }
-
         final String fieldName = jp.getCurrentName();
-        jp.nextToken(); // move to field value
 
+        // read field value
+        jp.nextToken();
         if ("count".equals(fieldName)) {
-          count = expectIntValue(jp, Memo.class, "count");
+          count = jp.getIntValue();
         } else if ("lines".equals(fieldName)) {
-          nextStartArray(jp, Memo.class);
-          for (;;) {
-            token = jp.nextToken();
-            if (token == JsonToken.END_ARRAY) {
-              break;
-            } else if (token != JsonToken.VALUE_STRING) {
-              throw new JsonMappingException("String[] values expected for " + fieldName + " for " + Memo.class, jp.getCurrentLocation());
-            }
-
-            lines.add(jp.getText());
-          }
+          lines = jp.readValueAs(new TypeReference<List<String>>() {});
         } else {
-          throw new JsonMappingException("Unknown field " + fieldName + " for " + Memo.class, jp.getCurrentLocation());
+          ctxt.handleUnknownProperty(jp, this, Memo.class, fieldName);
         }
       }
+
+      // null adaptation?
+      lines = lines != null ? lines : Collections.<String>emptyList();
 
       return new Memo(lines, count);
     }
@@ -83,42 +81,12 @@ public class JacksonModuleProvider {
 
   private static void serializeMemo(Memo value, JsonGenerator gen) throws IOException {
     gen.writeStartObject();
-    gen.writeFieldName("count");
-    gen.writeNumber(value.getCount());
-    gen.writeFieldName("lines");
-    gen.writeStartArray();
+    gen.writeNumberField("count", value.getCount());
+    gen.writeArrayFieldStart("lines");
     for (final String line : value.getLines()) {
       gen.writeString(line);
     }
     gen.writeEndArray();
     gen.writeEndObject();
-  }
-
-  //
-  // helpers
-  //
-
-
-  // deserializer helper
-
-  private static void expectStartObject(JsonParser jp, Class<?> type) throws IOException {
-    if (jp.getCurrentToken() != JsonToken.START_OBJECT) {
-      throw new JsonMappingException("Expected object for " + type, jp.getCurrentLocation());
-    }
-  }
-
-  private static void nextStartArray(JsonParser jp, Class<?> type) throws IOException {
-    if (jp.getCurrentToken() != JsonToken.START_ARRAY) {
-      throw new JsonMappingException("Expected array for " + type, jp.getCurrentLocation());
-    }
-  }
-
-  private static int expectIntValue(JsonParser jp, Class<?> type, String fieldName) throws IOException {
-    if (jp.getCurrentToken() != JsonToken.VALUE_NUMBER_INT) {
-      throw new JsonMappingException("Expected int value for field " + fieldName + " in class " + type,
-          jp.getCurrentLocation());
-    }
-
-    return (Integer) jp.getNumberValue();
   }
 }
